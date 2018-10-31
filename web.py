@@ -34,7 +34,8 @@ def _write_file(name, data):
 
 @app.route('/')
 def index():
-    documents = glob(path.join(DIR, 'files', '*.json'))
+    files = glob(path.join(DIR, 'files', '*.json'))
+    documents = [path.basename(filepath) for filepath in files]
     return render_template('index.html', documents=documents)
 
 
