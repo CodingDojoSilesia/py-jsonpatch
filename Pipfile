@@ -13,3 +13,7 @@ httpie = "*"
 
 [requires]
 python_version = "3.6"
+
+[scripts]
+tests = "bash -c 'flake8 && pytest -v'"
+web = "bash -c 'FLASK_APP=web flask run'"
