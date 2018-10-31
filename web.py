@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, abort
+from flask import Flask, render_template, request
 from flask.json import jsonify
 
 from os import path
@@ -73,4 +73,3 @@ def patch_document(name):
     new_data = patch_lib.patch_document(data, commands)
     _write_file(name, new_data)
     return jsonify(new_data)
-
