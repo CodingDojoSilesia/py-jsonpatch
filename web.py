@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, send_from_directory, request
 from flask.json import jsonify
 
 from os import path
@@ -34,12 +34,17 @@ def _write_file(name, data):
 
 @app.route('/')
 def index():
+    return send_from_directory('templates', 'index.html')
+
+
+@app.route('/documents/', methods=['GET'])
+def get_all_documents():
     files = glob(path.join(DIR, 'files', '*.json'))
     documents = [path.basename(filepath) for filepath in files]
-    return render_template('index.html', documents=documents)
+    return jsonify(documents)
 
 
-@app.route('/<name>.json', methods=['GET'])
+@app.route('/documents/<name>.json', methods=['GET'])
 def get_document(name):
     data = _load_file(name)
     if isinstance(data, tuple):  # error
@@ -48,7 +53,7 @@ def get_document(name):
     return jsonify(data)
 
 
-@app.route('/<name>.json', methods=['PUT'])
+@app.route('/documents/<name>.json', methods=['PUT'])
 def put_document(name):
     try:
         data = json.loads(request.data)
@@ -59,7 +64,7 @@ def put_document(name):
     return jsonify(data)
 
 
-@app.route('/<name>.json', methods=['PATCH'])
+@app.route('/documents/<name>.json', methods=['PATCH'])
 def patch_document(name):
     data = _load_file(name)
     if isinstance(data, tuple):  # error

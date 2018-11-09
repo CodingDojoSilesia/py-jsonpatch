@@ -16,7 +16,7 @@ def client():
 @patch_load_file
 def test_get_document(load_file, client):
     load_file.return_value = {'test': 'test'}
-    response = client.get('/test.json')
+    response = client.get('documents/test.json')
 
     assert response.status == '200 OK'
     assert response.data == b'{"test":"test"}\n'
@@ -26,7 +26,7 @@ def test_get_document(load_file, client):
 
 @patch_write_file
 def test_put_document(write_file, client):
-    response = client.put('/test.json', json={'new': 'new'})
+    response = client.put('documents/test.json', json={'new': 'new'})
 
     assert response.status == '200 OK'
     assert response.data == b'{"new":"new"}\n'
@@ -47,7 +47,7 @@ def test_patch_document(patch_lib, load_file, write_file, client):
         {'op': 'add', 'path': '/new', 'value': 'new'},
         {'op': 'remove', 'path': '/test'},
     ]
-    response = client.patch('/test.json', json=commands)
+    response = client.patch('documents/test.json', json=commands)
 
     assert response.status == '200 OK'
     assert response.data == b'{"new":"new"}\n'
