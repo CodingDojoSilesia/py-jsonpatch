@@ -14,7 +14,7 @@
             <ul v-if="!documentLoading">
                 <li v-for="document in documents">
                     {{ document }}
-                    <button v-on:click="selectDocument(document)">open</button>
+                    <button v-on:click="selectDocument(document)">select</button>
                     <button v-on:click="deleteDocument(document)">delete</button>
                 </li>
                 <li v-if="!documentLoading && documents.length === 0">
@@ -74,6 +74,7 @@
                     </tr>
                 </table>
                 <button v-on:click="patchDocument()">Update document</button>
+                <div v-if="error">error ;_; {{error.message}}</div>
             </div>
         </div>
         <script>
@@ -114,6 +115,7 @@ function fillSelectedDocument(jsonBody) {
     var hljsObj = hljs.highlight('javascript', rawBody);
     this.selectedDocument = hljsObj.value;
     this.selectedLoading = false;
+    this.error = null;
     this.commands = [];
 }
 
@@ -128,6 +130,7 @@ function deleteDocument(filename) {
         if (self.selectedName == filename) {
             self.selectedName = null;
             self.selectedDocument = null;
+            self.error = null;
             self.commands = [];
         }
     });
@@ -170,8 +173,10 @@ function patchDocument() {
     }
     this.selectedLoading = true;
     var options = {method: 'PATCH', body: JSON.stringify(commands)};
+    var self = this;
     fetchJson("/documents/" + this.selectedName, options)
-        .then(this.fillSelectedDocument.bind(this));
+        .then(this.fillSelectedDocument.bind(this))
+        .catch(function (err) { self.error = err; self.selectedLoading = false; });
 }
 
 function prepareCommandsToSend(commands) {
@@ -193,7 +198,6 @@ function prepareCommandsToSend(commands) {
         }
     });
     return hasErrors? null : commands;
-
 }
 
 var data = {
@@ -203,6 +207,7 @@ var data = {
     selectedName: null,
     selectedDocument: null,
     selectedLoading: false,
+    error: null,
     commands: []
 }
 
