@@ -5,6 +5,7 @@ import pytest
 
 patch_load_file = patch('web._load_file')
 patch_write_file = patch('web._write_file')
+patch_remove_file = patch('web._remove_file')
 patch_lib = patch('web.patch_lib')
 
 
@@ -55,3 +56,11 @@ def test_patch_document(patch_lib, load_file, write_file, client):
     load_file.assert_called_once_with('test')
     write_file.assert_called_once_with('test', new_document)
     patch_lib.patch_document.assert_called_once_with(old_document, commands)
+
+
+@patch_remove_file
+def test_delete_document(remove_file, client):
+    response = client.delete('documents/test.json')
+
+    assert response.status == '204 NO CONTENT'
+    remove_file.assert_called_once_with('test')
