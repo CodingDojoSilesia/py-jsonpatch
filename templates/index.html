@@ -3,6 +3,7 @@
         <title>JSON PATCH TESTER</title>
         <meta charset='utf-8' />
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
         <link rel="stylesheet"
       href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/default.min.css">
 <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
@@ -10,41 +11,75 @@
     <body>
         <h1>Documents</h1>
         <div id='app'>
-            <span v-if="documentLoading">Loading…</span>
-            <ul v-if="!documentLoading">
-                <li v-for="document in documents">
-                    {{ document }}
-                    <button v-on:click="selectDocument(document)">select</button>
-                    <button v-on:click="deleteDocument(document)">delete</button>
-                </li>
-                <li v-if="!documentLoading && documents.length === 0">
-                    Documents not found.
-                </li>
-                <li>
-                    <input v-model:strip="newName" />
-                    <button
-                        :disabled="newName.length == 0"
-                        v-on:click="createEmptyDocument(newName)"
-                    > create </button>
-                </li>
-            </ul>
-            <button v-on:click="refreshList()">Refresh list</button>
-            <div v-if="selectedName">
-                <hr />
-                <h1>{{ selectedName }}</h1>
-                <span v-if="selectedLoading">Loading…</span>
-                <pre><code class="html" v-html="selectedDocument"></code></pre>
-                <table>
+            <span class="alert alert-primary" v-if="documentLoading">Loading…</span>
+            <table v-if="!documentLoading" class="table table-striped">
+                <thead class="thead-dark">
                     <tr>
-                        <th>OP</th>
-                        <th>FROM</th>
-                        <th>PATH</th>
-                        <th>VALUE</th>
+                        <th>name</th>
                         <th>*</th>
                     </tr>
+                </thead>
+                <tr v-for="document in documents">
+                    <td>{{ document }}</td>
+                    <td>
+                        <button
+                            class="btn btn-primary btn-sm"
+                            v-on:click="selectDocument(document)"
+                        >select</button>
+                        <button
+                            class="btn btn-warning btn-sm"
+                            v-on:click="deleteDocument(document)"
+                        >delete</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <input
+                                type="text"
+                                class="form-control"
+                                placeholder="new filename"
+                                v-model:strip="newName" />
+                            <div class="input-group-append">
+                                <span class="input-group-text">.json</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <button
+                            class="btn btn-primary btn-sm"
+                            :disabled="newName.length == 0"
+                            v-on:click="createEmptyDocument(newName)"
+                        >create</button>
+                    </td>
+                </tr>
+            </table>
+            <button class="btn" v-on:click="refreshList()">Refresh list</button>
+            <div v-if="selectedName">
+                <hr />
+                <h2>Document {{ selectedName }}</h2>
+                <span class="alert alert-primary" v-if="selectedLoading">Loading…</span>
+
+                <div class="container border bg-light">
+                    <br />
+                    <pre><code class="html" v-html="selectedDocument"></code></pre>
+                </div>
+                <br />
+
+                <h3> Commands </h3>
+                <table class="table table-striped table-bordered">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>operation</th>
+                            <th>from</th>
+                            <th>path</th>
+                            <th>value</th>
+                            <th>*</th>
+                        </tr>
+                    </thead>
                     <tr v-for="cmd, index in commands">
                         <td>
-                            <select v-model="cmd.op">
+                            <select v-model="cmd.op" class="form-control form-control-sm">
                                 <option>add</option>
                                 <option>remove</option>
                                 <option>replace</option>
@@ -54,27 +89,52 @@
                             </select>
                         </td>
                         <td v-if="['move', 'copy'].indexOf(cmd.op) > -1">
-                            <input v-model:strip="cmd.from" placeholder="from" />
+                            <input
+                                class="form-control form-control-sm"
+                                v-model:strip="cmd.from"
+                                placeholder="from" />
                         </td>
-                        <td v-else>-</td>
+                        <td class='text-center' v-else>-</td>
                         <td>
-                            <input v-model:strip="cmd.path" placeholder="path" />
+                            <input
+                                class="form-control form-control-sm"
+                                v-model:strip="cmd.path"
+                                placeholder="path" />
                         </td>
                         <td v-if="['remove', 'copy', 'move'].indexOf(cmd.op) == -1">
-                            <input v-model:strip="cmd.value" placeholder="value" />
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">JSON</span>
+                                </div>
+                                <input 
+                                    class="form-control"
+                                    v-model:strip="cmd.value"
+                                    placeholder="value" />
+                            </div>
                         </td>
-                        <td v-else>-</td>
+                        <td class='text-center' v-else>-</td>
                         <td>
-                            <button v-on:click="deleteCommand(index)">REMOVE</button>
+                            <button
+                                class="btn btn-danger btn-sm"
+                                v-on:click="deleteCommand(index)"
+                            >remove</button>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="4"></td>
-                        <td><button v-on:click="addCommand()">ADD</button></td>
+                        <td>
+                            <button
+                                class="btn btn-primary btn-sm"
+                                v-on:click="addCommand()"
+                            >ADD</button>
+                        </td>
                     </tr>
                 </table>
-                <button v-on:click="patchDocument()">Update document</button>
-                <div v-if="error">error ;_; {{error.message}}</div>
+                <div class="alert alert-danger" v-if="error">error ;_; {{error.message}}</div>
+                <button
+                    class="btn btn-success"
+                    v-on:click="patchDocument()"
+                >Update document</button>
             </div>
         </div>
         <script>
