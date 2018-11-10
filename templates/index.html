@@ -130,7 +130,7 @@
                         </td>
                     </tr>
                 </table>
-                <div class="alert alert-danger" v-if="error">error ;_; {{error.message}}</div>
+                <div class="alert alert-danger" v-if="error">error ;_; {{error}}</div>
                 <button
                     class="btn btn-success"
                     v-on:click="patchDocument()"
@@ -140,8 +140,8 @@
         <script>
 function fetchJson(endpoint, options) {
     return fetch(endpoint, options).then(function (resp) {
-        if (resp.status !== 200){
-            throw new Error("wrong status: " + resp.status);
+        if (resp.status >= 400) {
+            return Promise.reject(resp.json());
         }
         return resp.json();
     });
@@ -236,7 +236,12 @@ function patchDocument() {
     var self = this;
     fetchJson("/documents/" + this.selectedName, options)
         .then(this.fillSelectedDocument.bind(this))
-        .catch(function (err) { self.error = err; self.selectedLoading = false; });
+        .catch(function (err) { 
+            err.then(function (body) {
+                self.error = body.error;
+                self.selectedLoading = false;
+            });
+        });
 }
 
 function prepareCommandsToSend(commands) {

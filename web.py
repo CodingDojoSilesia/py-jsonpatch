@@ -86,7 +86,11 @@ def patch_document(name):
     except ValueError as exp:
         return jsonify(error=str(exp)), 400
 
-    new_data = patch_lib.patch_document(data, commands)
+    try:
+        new_data = patch_lib.patch_document(data, commands)
+    except patch_lib.PatchError as exp:
+        return jsonify(error=str(exp)), 400
+
     _write_file(name, new_data)
     return jsonify(new_data)
 
