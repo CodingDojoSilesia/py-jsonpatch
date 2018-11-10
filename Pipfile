@@ -8,6 +8,7 @@ pytest = "*"
 flask = "*"
 "flake8" = "*"
 httpie = "*"
+pytest-cov = "*"
 
 [dev-packages]
 
@@ -15,5 +16,5 @@ httpie = "*"
 python_version = "3.6"
 
 [scripts]
-tests = "bash -c 'flake8 && pytest -v'"
+tests = "bash -c 'flake8 && pytest -v --cov=.'"
 web = "bash -c 'FLASK_APP=web flask run'"
