@@ -41,11 +41,18 @@ def test_add():
     assert document == {"hello": ["world"]}
 
 
-def test_replace():
+def test_replace_single_value():
     replace_command = {"op": "replace", "path": "/baz/0", "value": "boo"}
-    old_document = {"baz": ["ojoj"]}
+    old_document = {"baz": ["previous", "stay"]}
     document = patch_document(old_document, [replace_command])
-    assert document == {"baz": ["boo"]}
+    assert document == {"baz": ["boo", "stay"]}
+
+
+def test_replace_list():
+    replace_command = {"op": "replace", "path": "/baz", "value": "boo"}
+    old_document = {"baz": ["ojoj", "stay"]}
+    document = patch_document(old_document, [replace_command])
+    assert document == {"baz": "boo"}
 
 
 def test_replace_out_of_range():
@@ -71,7 +78,14 @@ def test_move_path_list():
     assert document == {"biscuits": [], "cookies": ["cookie", "biscuit"]}
 
 
-def test_move_from_not_exist_element():
+def test_move_single_value():
+    move_command = {"op": "move", "from": "/biscuits/0", "path": "/cookies"}
+    old_document = {"biscuits": ["biscuit", "second"], "cookies": ["cookie"]}
+    document = patch_document(old_document, [move_command])
+    assert document == {"biscuits": [], "cookies": ["cookie", "biscuit"]}
+
+
+def test_move_from_not_exist_path():
     move_command = {"op": "move", "from": "/foo", "path": "/cookies"}
     old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
     with raises(PatchError) as error:
@@ -79,7 +93,7 @@ def test_move_from_not_exist_element():
     assert str(error.value) == "Can't move from not exist path."
 
 
-def test_move_to_not_exist_element():
+def test_move_to_not_exist_path():
     move_command = {"op": "move", "from": "/biscuits", "path": "/foo"}
     old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
     with raises(PatchError) as error:
@@ -87,36 +101,44 @@ def test_move_to_not_exist_element():
     assert str(error.value) == "Can't move to not exist path."
 
 
-def test_copy_value_to_list():
+def test_copy_single_value_to_list():
     copy_command = {"op": "copy", "from": "/biscuits/0", "path": "/cookies"}
-    old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
+    old_document = {"biscuits": ["biscuit", "not_copy"], "cookies": ["cookie"]}
     document = patch_document(old_document, [copy_command])
-    assert document == {"biscuits": ["biscuit"],
-                        "cookies": ["biscuit", "cookie"]}
+    assert document == {"biscuits": ["biscuit", "not_copy"],
+                        "cookies": ["cookie", "biscuit"]}
 
 
 def test_copy_value_to_end_of_list():
     copy_command = {"op": "copy", "from": "/biscuits/0", "path": "/cookies/-"}
-    old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
+    old_document = {"biscuits": ["biscuit", "not_copy"], "cookies": ["cookie"]}
     document = patch_document(old_document, [copy_command])
-    assert document == {"biscuits": ["biscuit"],
-                        "cookies": ["cookie", "biscuit", ]}
+    assert document == {"biscuits": ["biscuit", "not_copy"],
+                        "cookies": ["cookie", "biscuit"]}
 
 
 def test_copy_list_to_list():
     copy_command = {"op": "copy", "from": "/biscuits", "path": "/cookies"}
-    old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
+    old_document = {"biscuits": ["biscuit", "to_copy"], "cookies": ["cookie"]}
     document = patch_document(old_document, [copy_command])
-    assert document == {"biscuits": ["biscuit"],
-                        "cookies": ["cookie", "biscuit"]}
+    assert document == {"biscuits": ["biscuit", "to_copy"],
+                        "cookies": ["cookie", "biscuit", "to_copy"]}
+
+
+def test_move_not_exist_element():
+    copy_command = {"op": "move", "from": "/biscuits/1", "path": "/cookies"}
+    old_document = {"biscuits": ["biscuit"], "cookies": []}
+    with raises(PatchError) as error:
+        patch_document(old_document, [copy_command])
+    assert str(error.value) == "Can't move not exist object."
 
 
 def test_copy_not_exist_element():
-    copy_command = {"op": "move", "from": "/biscuits/1", "path": "/cookies"}
-    old_document = {"biscuits": ["biscuit"], "cookies": {}}
+    copy_command = {"op": "copy", "from": "/biscuits/1", "path": "/cookies"}
+    old_document = {"biscuits": ["biscuit"], "cookies": []}
     with raises(PatchError) as error:
         patch_document(old_document, [copy_command])
-    assert str(error.value) == "Can't copy not exist object."
+    assert str(error.value) == "Can't copy from not exist object."
 
 
 def test_test_when_value_exist():
