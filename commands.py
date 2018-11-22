@@ -8,11 +8,49 @@ def remove(document, command):
 
 
 def add(document, command):
-    path_to_add = command['path'].split('/')[1]
-    if path_to_add in document.keys():
-        return {}, f"Can't add existing path."
-    path_value = command['value']
-    document[path_to_add] = path_value
+    """
+    Adds a value to an object or inserts it into an array.
+    :param document:
+    :param command:
+    :return:
+    """
+    splitted_path = command['path'].split('/')
+    value = command['value']
+    path_to_add = splitted_path[1]
+    index_to_add = None
+    if path_to_add not in document.keys():
+        document[path_to_add] = value
+        return document, ""
+    if len(splitted_path) == 3:
+        index_to_add = splitted_path[2]
+        try:
+            index_to_add = int(index_to_add)
+        except ValueError:
+            pass
+        try:
+            document[path_to_add][index_to_add]
+
+        except (IndexError, KeyError):
+            if not isinstance(index_to_add, int):
+                document[path_to_add] = {index_to_add: value}
+            else:
+                try:
+                    if isinstance(document[path_to_add], list):
+                        document[path_to_add].insert(index_to_add, value)
+                    elif isinstance(document[path_to_add], dict):
+                        document[path_to_add][index_to_add].update(value)
+                except ValueError:
+                    return {}, "Incorrect structure to add."
+        else:
+            return {}, "Can't overwrite existing value."
+    else:
+        try:
+            if isinstance(document[path_to_add], list):
+                document[path_to_add].append(value)
+            elif isinstance(document[path_to_add], dict):
+                document[path_to_add].update(value)
+        except ValueError:
+            return {}, "Incorrect structure to add."
     return document, ""
 
 
@@ -69,9 +107,12 @@ def copy(document, command):
     coppied_path = splitted_path[1]
     to_path = command['path'].split('/')[1]
     index_to_copy = None
-    if len(splitted_path) == 3:
-        index_to_copy = int(splitted_path[2])
 
+    if len(splitted_path) == 3:
+        try:
+            index_to_copy = int(splitted_path[2])
+        except ValueError:
+            index_to_copy = splitted_path[2]
     try:
         if index_to_copy is None:
             value_to_copy = document[coppied_path]
@@ -81,7 +122,8 @@ def copy(document, command):
         return {}, "Can't copy from not exist path."
     except IndexError:
         return {}, "Can't copy from not exist object."
-
+    except TypeError:
+        return {}, "Can't get key address from list."
     try:
         if type(value_to_copy) == list:
             document[to_path].extend(value_to_copy)
@@ -89,7 +131,6 @@ def copy(document, command):
             document[to_path].append(value_to_copy)
     except KeyError:
         return {}, "Can't copy to not exist path."
-    print(document)
     return document, ""
 
 
@@ -97,10 +138,24 @@ def test(document, command):
     splitted_path = command['path'].split('/')
     path = splitted_path[1]
     object_address = None
-    value_to_validate = command['value']
+    expected_value = command['value']
     if len(splitted_path) == 3:
         object_address = splitted_path[2]
-    if document[path][object_address] == value_to_validate:
+        try:
+            object_address = int(object_address)
+        except ValueError:
+            object_address = object_address
+    try:
+        if object_address is None:
+            tested_value = document[path]
+        else:
+            tested_value = document[path][object_address]
+    except KeyError:
+        return {}, "Can't test not exist path."
+    except IndexError:
+        return {}, "Can't test not exist object."
+
+    if tested_value == expected_value:
         return document, ""
     return {}, "Test fail. Value is different than expected."
 
