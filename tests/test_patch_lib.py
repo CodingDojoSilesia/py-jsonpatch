@@ -18,21 +18,21 @@ def test_not_known_command():
     command = {"op": "fooo", "path": "/test"}
     with raises(PatchError) as error:
         patch_document({"hello": {}}, [command])
-        assert error == "Not known command: fooo"
+    assert str(error.value) == "Not known command:fooo"
 
 
 def test_remove_not_exist_element():
     delete_command = {"op": "remove", "path": "/fooo"}
     with raises(PatchError) as error:
         patch_document({"test": "test"}, [delete_command])
-        assert error == "Can't remove not exist object."
+    assert str(error.value) == "Can't remove not exist object: fooo."
 
 
 def test_add_existing_path():
     add_command = {"op": "add", "path": "/hello", "value": ["world"]}
     with raises(PatchError) as error:
         patch_document({"hello": {}}, [add_command])
-        assert error == "Can't add existing path."
+    assert str(error.value) == "Can't add existing path."
 
 
 def test_add():
@@ -42,10 +42,26 @@ def test_add():
 
 
 def test_replace():
-    replace_command = {"op": "replace", "path": "/baz/1", "value": "boo"}
+    replace_command = {"op": "replace", "path": "/baz/0", "value": "boo"}
     old_document = {"baz": ["ojoj"]}
     document = patch_document(old_document, [replace_command])
     assert document == {"baz": ["boo"]}
+
+
+def test_replace_out_of_range():
+    replace_command = {"op": "replace", "path": "/baz/5", "value": "boo"}
+    old_document = {"baz": ["ojoj"]}
+    with raises(PatchError) as error:
+        patch_document(old_document, [replace_command])
+    assert str(error.value) == "Can't replace not existing object."
+
+
+def test_replace_not_exist_object():
+    replace_command = {"op": "replace", "path": "/foo/5", "value": "boo"}
+    old_document = {"baz": ["ojoj"]}
+    with raises(PatchError) as error:
+        patch_document(old_document, [replace_command])
+    assert str(error.value) == "Can't replace not existing path."
 
 
 def test_move_path_list():
@@ -55,12 +71,20 @@ def test_move_path_list():
     assert document == {"biscuits": [], "cookies": ["cookie", "biscuit"]}
 
 
-def test_move_not_exist_element():
-    move_command = {"op": "move", "from": "/biscuits", "path": "/cookies"}
+def test_move_from_not_exist_element():
+    move_command = {"op": "move", "from": "/foo", "path": "/cookies"}
     old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
     with raises(PatchError) as error:
         patch_document(old_document, [move_command])
-        assert error == "Can't move not exist object."
+    assert str(error.value) == "Can't move from not exist path."
+
+
+def test_move_to_not_exist_element():
+    move_command = {"op": "move", "from": "/biscuits", "path": "/foo"}
+    old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
+    with raises(PatchError) as error:
+        patch_document(old_document, [move_command])
+    assert str(error.value) == "Can't move to not exist path."
 
 
 def test_copy_value_to_list():
@@ -92,7 +116,7 @@ def test_copy_not_exist_element():
     old_document = {"biscuits": ["biscuit"], "cookies": {}}
     with raises(PatchError) as error:
         patch_document(old_document, [copy_command])
-        assert error == "Can't copy not exist object."
+    assert str(error.value) == "Can't copy not exist object."
 
 
 def test_test_when_value_exist():
@@ -112,4 +136,4 @@ def test_test_when_value_not_exist():
         patch_document(
             {"best_biscuit": {'name': "Choko sticker"}
              }, [test_command])
-        assert error == "Test fail. Value is different than expected."
+    assert str(error.value) == "Test fail. Value is different than expected."

@@ -1,9 +1,16 @@
-from logging import getLogger
-logger = getLogger(__name__)
+from commands import commands_functions
 
 
 class PatchError(Exception):
     pass
+
+
+def execute_properly_modification(document, command):
+    try:
+        make_changes = commands_functions[command['op']]
+    except KeyError as error:
+        return {}, f"Not known command:{error.args[0]}"
+    return make_changes(document, command)
 
 
 def patch_document(document, commands):
@@ -18,9 +25,9 @@ def patch_document(document, commands):
     {"op": "move", "from": "/biscuits", "path": "/cookies"}]
     :return: dict with updated document by received commands
     """
-    logger.error(commands)
-    logger.info(commands)
-    print(document)
-    return document
-    if "something_is_wrong":
-        raise PatchError('something is wrong, dude')
+    new_doc = document.copy()
+    for command in commands:
+        new_doc, error = execute_properly_modification(new_doc, command)
+        if error:
+            raise PatchError(error)
+    return new_doc
