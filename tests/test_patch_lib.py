@@ -14,6 +14,13 @@ def test_remove():
     assert document == {}
 
 
+def test_not_known_command():
+    command = {"op": "fooo", "path": "/test"}
+    with raises(PatchError) as error:
+        patch_document({"hello": {}}, [command])
+    error.value.message == "Not known command"
+
+
 def test_remove_not_exist_element():
     delete_command = {"op": "remove", "path": "/fooo"}
     with raises(PatchError) as error:
