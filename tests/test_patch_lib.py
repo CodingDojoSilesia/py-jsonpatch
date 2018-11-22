@@ -18,21 +18,21 @@ def test_not_known_command():
     command = {"op": "fooo", "path": "/test"}
     with raises(PatchError) as error:
         patch_document({"hello": {}}, [command])
-    assert error.value.message == "Not known command"
+        assert error == "Not known command: fooo"
 
 
 def test_remove_not_exist_element():
     delete_command = {"op": "remove", "path": "/fooo"}
     with raises(PatchError) as error:
         patch_document({"test": "test"}, [delete_command])
-    assert error.value.message == "Can't remove not exist object."
+        assert error == "Can't remove not exist object."
 
 
 def test_add_existing_path():
     add_command = {"op": "add", "path": "/hello", "value": ["world"]}
     with raises(PatchError) as error:
         patch_document({"hello": {}}, [add_command])
-    assert error.value.message == "Can't add existing path."
+        assert error == "Can't add existing path."
 
 
 def test_add():
@@ -60,7 +60,7 @@ def test_move_not_exist_element():
     old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
     with raises(PatchError) as error:
         patch_document(old_document, [move_command])
-    assert error.value.message == "Can't move not exist object."
+        assert error == "Can't move not exist object."
 
 
 def test_copy_value_to_list():
@@ -92,7 +92,7 @@ def test_copy_not_exist_element():
     old_document = {"biscuits": ["biscuit"], "cookies": {}}
     with raises(PatchError) as error:
         patch_document(old_document, [copy_command])
-    assert error.value.message == "Can't copy not exist object."
+        assert error == "Can't copy not exist object."
 
 
 def test_test_when_value_exist():
@@ -112,5 +112,4 @@ def test_test_when_value_not_exist():
         patch_document(
             {"best_biscuit": {'name': "Choko sticker"}
              }, [test_command])
-    assert error.value.message == "Test fail." \
-                                  " value is different than expected."
+        assert error == "Test fail. Value is different than expected."
