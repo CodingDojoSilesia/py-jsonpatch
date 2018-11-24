@@ -39,15 +39,14 @@ def test_add_value_to_list():
             {'op': 'add', 'path': '/foo', 'value': []},
             {'op': 'add', 'path': '/foo/-', 'value': 'first'},
             {'op': 'add', 'path': '/foo/-', 'value': 'second'},
-            {'op': 'add', 'path': '/foo/0', 'value': 'third'},
         ],
     )
     assert result == {
-        'foo': ['third', 'second'],
+        'foo': ['first', 'second'],
     }
 
 
-def test_remove_value_to_list():
+def test_remove_value_in_list():
     result = patch_document(
         document={
             'dict': {'foo': 'bar'},
@@ -70,7 +69,7 @@ def test_remove_value_to_list():
     }
 
 
-def test_add_value_in_exist_key():
+def test_add_value_in_exist_dict_key():
     with pytest.raises(PatchError) as exinfo:
         patch_document(
             document={'foo': 'bar'},
@@ -79,6 +78,127 @@ def test_add_value_in_exist_key():
 
     assert exinfo.value.args[0] == "key exists in '/foo'"
 
+
+def test_add_value_in_exist_list_key():
+    with pytest.raises(PatchError) as exinfo:
+        patch_document(
+            document={'foo': [1, 2]},
+            commands=[{'op': 'add', 'path': '/foo/0', 'value': 'xxx'}],
+        )
+
+    assert exinfo.value.args[0] == "key exists in '/foo/0'"
+
+
+def test_move_value():
+    result = patch_document(
+        document={'foo': 'bar'},
+        commands=[
+            {'op': 'move', 'from': '/foo',  'path': '/bar'},
+        ],
+    )
+    assert result == {'bar': 'bar'}
+
+
+def test_move_to_list():
+    result = patch_document(
+        document={
+            'foo': 'bar',
+            'list': [],
+        },
+        commands=[
+            {'op': 'move', 'from': '/foo',  'path': '/list/-'},
+        ],
+    )
+    assert result == {'list': ['bar']}
+
+
+def test_move_in_dict():
+    result = patch_document(
+        document={
+            'foo': {'0': 'bar', '2': '2'},
+        },
+        commands=[
+            {'op': 'move', 'from': '/foo/0',  'path': '/bar'},
+        ],
+    )
+    assert result == {
+        'foo': {'2': '2'},
+        'bar': 'bar',
+    }
+
+
+def test_move_in_list():
+    result = patch_document(
+        document={
+            'foo': ['bar', '2'],
+        },
+        commands=[
+            {'op': 'move', 'from': '/foo/0',  'path': '/bar'},
+        ],
+    )
+    assert result == {
+        'foo': ['2'],
+        'bar': 'bar',
+    }
+
+
+def test_copy_value():
+    result = patch_document(
+        document={'foo': 'bar'},
+        commands=[
+            {'op': 'copy', 'from': '/foo',  'path': '/bar'},
+        ],
+    )
+    assert result == {
+        'foo': 'bar',
+        'bar': 'bar',
+    }
+
+
+def test_copy_to_list():
+    result = patch_document(
+        document={
+            'nested': {'foo': 'bar'},
+            'list': [],
+        },
+        commands=[
+            {'op': 'copy', 'from': '/nested/foo',  'path': '/list/-'},
+        ],
+    )
+    assert result == {
+        'nested': {'foo': 'bar'},
+        'list': ['bar']
+    }
+
+
+def test_copy_in_dict():
+    result = patch_document(
+        document={
+            'foo': {'0': 'bar', '2': '2'},
+        },
+        commands=[
+            {'op': 'copy', 'from': '/foo/0',  'path': '/bar'},
+        ],
+    )
+    assert result == {
+        'foo': {'0': 'bar', '2': '2'},
+        'bar': 'bar',
+    }
+
+
+def test_copy_in_list():
+    result = patch_document(
+        document={
+            'foo': ['bar', '2'],
+        },
+        commands=[
+            {'op': 'copy', 'from': '/foo/0',  'path': '/bar'},
+        ],
+    )
+    assert result == {
+        'foo': ['bar', '2'],
+        'bar': 'bar',
+    }
 
 def test_replace_value():
     result = patch_document(
@@ -172,7 +292,6 @@ def test_find_parent_and_key_not_exist():
 
 
 @pytest.mark.parametrize('path,result', [
-    ('/', []),
     ('/foo', ['foo']),
     ('/foo/bar', ['foo', 'bar']),
     ('/foo/bar/1/-', ['foo', 'bar', '1', '-']),
@@ -184,6 +303,7 @@ def test_path_to_list(path, result):
 
 
 @pytest.mark.parametrize('wrong_path', [
+    '/',
     'bar',
 ])
 def test_path_to_list__wrong(wrong_path):

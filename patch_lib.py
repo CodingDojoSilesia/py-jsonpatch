@@ -19,8 +19,7 @@ def add_callback(document, command):
     if key == '-':
         parent.append(value)
     else:
-        if key in parent:
-            raise PatchError(f'key exists in {path!r}')
+        raise_if_found(parent, key, path)
         parent[key] = value
 
 
@@ -39,6 +38,23 @@ def replace_callback(document, command):
     parent[key] = value
 
 
+def move_callback(document, command, copy=False):
+    from_path = command['from']
+    from_parent, from_key = find_parent_and_key_with_path(document, from_path)
+    raise_if_not_found(from_parent, from_key, from_path)
+
+    add_callback(
+        document=document,
+        command={
+            'path': command['path'],
+            'value': from_parent[from_key],
+        }
+    )
+
+    if not copy:
+        del from_parent[from_key]
+
+
 def raise_if_not_found(parent, key, path):
     try:
         parent[key]
@@ -46,10 +62,21 @@ def raise_if_not_found(parent, key, path):
         raise PatchError(f'key doesn\'t exist in {path!r}')
 
 
+def raise_if_found(parent, key, path):
+    try:
+        parent[key]
+    except (IndexError, KeyError):
+        pass
+    else:
+        raise PatchError(f'key exists in {path!r}')
+
+
 CALLBACKS = {
     'add': add_callback,
     'remove': remove_callback,
     'replace': replace_callback,
+    'move': move_callback,
+    'copy': lambda d, c: move_callback(d, c, copy=True),
 }
 
 
@@ -79,8 +106,6 @@ def find_parent_and_key(obj, path_list):
 
 
 def path_to_list(path):
-    if path[0] != '/':
+    if path[0] != '/' or len(path) == 1:
         raise PatchError('wrong path')
-    if len(path) == 1:
-        return []
     return path[1:].split('/')
