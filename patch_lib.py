@@ -9,12 +9,12 @@ def patch_document(document, commands):
 
 
 def find_parent_and_key(obj, path_list):
-    key, *path_list = path_list
+    key, *new_path_list = path_list
 
     if isinstance(obj, list):
         key = int(key)
 
-    if not path_list:
+    if not new_path_list:
         return obj, key 
 
     try:
@@ -26,4 +26,12 @@ def find_parent_and_key(obj, path_list):
         type_name = type(nested_obj).__name__
         raise PatchError(f'{key!r} has a wrong nested type: {type_name}')
 
-    return find_parent_and_key(nested_obj, path_list)
+    return find_parent_and_key(nested_obj, new_path_list)
+
+
+def path_to_list(path):
+    if path[0] != '/':
+        raise PatchError('wrong path')
+    if len(path) == 1:
+        return []
+    return path[1:].split('/')

@@ -1,4 +1,5 @@
-from patch_lib import patch_document, find_parent_and_key, PatchError
+from patch_lib import patch_document, find_parent_and_key, path_to_list
+from patch_lib import PatchError
 
 import pytest
 
@@ -66,3 +67,25 @@ def test_find_parent_and_key_not_exist():
         parent, key = find_parent_and_key(obj,  ['not_exist', 'foo'])
 
     assert exc.value.args[0] == "'not_exist' doesn't exist"
+
+
+@pytest.mark.parametrize('path,result', [
+    ('/', []),
+    ('/foo', ['foo']),
+    ('/foo/bar', ['foo', 'bar']),
+    ('/foo/bar/1/-', ['foo', 'bar', '1', '-']),
+    ('/foo//bar', ['foo', '', 'bar']),
+    ('/foo/bar/', ['foo', 'bar', '']),
+])
+def test_path_to_list(path, result):
+    assert path_to_list(path) == result
+
+
+@pytest.mark.parametrize('wrong_path', [
+    'bar',
+])
+def test_path_to_list__wrong(wrong_path):
+    with pytest.raises(PatchError) as excinfo:
+        path_to_list(wrong_path)
+
+    assert excinfo.value.args[0] == 'wrong path'
