@@ -9,6 +9,98 @@ def test_not_modified_document():
     assert document == {"test": "test"}
 
 
+def test_add_value():
+    result = patch_document(
+        document={},
+        commands=[
+            {'op': 'add', 'path': '/foobar', 'value': 'alabama'},
+        ],
+    )
+    assert result == {'foobar': 'alabama'}
+
+
+def test_add_value_nested():
+    result = patch_document(
+        document={},
+        commands=[
+            {'op': 'add', 'path': '/foo', 'value': {}},
+            {'op': 'add', 'path': '/foo/bar', 'value': 'alabama'},
+        ],
+    )
+    assert result == {
+        'foo': {'bar': 'alabama'}
+    }
+
+
+def test_add_value_to_list():
+    result = patch_document(
+        document={},
+        commands=[
+            {'op': 'add', 'path': '/foo', 'value': []},
+            {'op': 'add', 'path': '/foo/-', 'value': 'first'},
+            {'op': 'add', 'path': '/foo/-', 'value': 'second'},
+            {'op': 'add', 'path': '/foo/0', 'value': 'third'},
+        ],
+    )
+    assert result == {
+        'foo': ['third', 'second'],
+    }
+
+
+def test_remove_value_to_list():
+    result = patch_document(
+        document={
+            'dict': {'foo': 'bar'},
+            'dict-to-remove': {'foo': 'bar'},
+            'list': [1, 2, 3],
+            'list-to-remove': [1, 2, 3],
+            'foo': 'bar',
+        },
+        commands=[
+            {'op': 'remove', 'path': '/dict-to-remove'},
+            {'op': 'remove', 'path': '/dict/foo'},
+            {'op': 'remove', 'path': '/list-to-remove'},
+            {'op': 'remove', 'path': '/list/1'},
+            {'op': 'remove', 'path': '/foo'},
+        ],
+    )
+    assert result == {
+        'dict': {},
+        'list': [1, 3],
+    }
+
+
+def test_add_value_in_exist_key():
+    with pytest.raises(PatchError) as exinfo:
+        patch_document(
+            document={'foo': 'bar'},
+            commands=[{'op': 'add', 'path': '/foo', 'value': 'xxx'}],
+        )
+
+    assert exinfo.value.args[0] == "key exists in '/foo'"
+
+
+def test_replace_value():
+    result = patch_document(
+        document={
+            'foo': 'bar',
+            'list': ['foo'],
+            'dict': {'foo': 'bar'},
+        },
+        commands=[
+            {'op': 'replace', 'path': '/foo', 'value': 'xxx'},
+            {'op': 'replace', 'path': '/list/0', 'value': 'xxx'},
+            {'op': 'replace', 'path': '/dict/foo', 'value': 'xxx'},
+        ],
+    )
+
+    assert result == {
+        'foo': 'xxx',
+        'list': ['xxx'],
+        'dict': {'foo': 'xxx'},
+    }
+
+
 def test_find_parent_and_key_flat():
     obj = {'key': 'foobar'}
     parent, key = find_parent_and_key(obj,  ['key'])
