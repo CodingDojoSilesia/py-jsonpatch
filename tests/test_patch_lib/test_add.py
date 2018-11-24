@@ -4,9 +4,9 @@ from pytest import raises
 
 
 def test_add_to_existing_path_list():
-    add_command = {"op": "add", "path": "/hello", "value": ["world"]}
+    add_command = {"op": "add", "path": "/hello/0", "value": "world"}
     document = patch_document({"hello": []}, [add_command])
-    assert document == {"hello": [["world"]]}
+    assert document == {"hello": ["world"]}
 
 
 def test_add_to_list_index_when_without_value():
@@ -15,7 +15,7 @@ def test_add_to_list_index_when_without_value():
     assert document == {"hello": ["first", ["world"]]}
 
 
-def test_add_to_list_index_when_with_value():
+def test_add_to_list_index_when_need_overwrite():
     add_command = {"op": "add", "path": "/hello/0", "value": ["world"]}
     old_document = {"hello": ["reserved"]}
     with raises(PatchError) as error:
@@ -27,9 +27,9 @@ def test_add_to_dict_field():
     add_command = {"op": "add",
                    "path": "/hello/name",
                    "value": {'test': "test"}}
-    old_document = {"hello": {}}
+    old_document = {"hello": {'foo': 'poo'}}
     document = patch_document(old_document, [add_command])
-    assert document == {"hello": {'name': {'test': "test"}}}
+    assert document == {"hello": {'name': {'test': "test"}, 'foo': 'poo'}}
 
 
 def test_add_path():
@@ -39,15 +39,15 @@ def test_add_path():
 
 
 def test_add_list_to_path_with_dict():
-    add_command = {"op": "add", "path": "/hello", "value": ["world"]}
+    add_command = {"op": "add", "path": "/hello/list", "value": ["world"]}
     old_document = {"hello": {"name": "empty"}}
-    with raises(PatchError) as error:
-        patch_document(old_document, [add_command])
-    assert str(error.value) == "Incorrect structure to add."
+
+    document = patch_document(old_document, [add_command])
+    assert document == {"hello": {"name": "empty", "list": ["world"]}}
 
 
 def test_add_dict_to_path_with_list():
-    add_command = {"op": "add", "path": "/hello", "value": {"name": "empty"}}
+    add_command = {"op": "add", "path": "/hello/1", "value": {"name": "empty"}}
     old_document = {"hello": ["value"]}
     document = patch_document(old_document, [add_command])
     assert document == {"hello": ["value", {"name": "empty"}]}

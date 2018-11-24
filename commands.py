@@ -1,104 +1,113 @@
+def get_path_elements(path_to_split):
+    splitted_path = path_to_split.split('/')
+    path_elements = filter(str.strip, splitted_path)
+    serialized_path = []
+    for element in path_elements:
+        try:
+            serialized_path.append(int(element))
+        except ValueError:
+            serialized_path.append(element)
+    return serialized_path
+
+
 def remove(document, command):
-    path_to_remove = command['path'].split('/')[1]
-    try:
-        del document[path_to_remove]
-    except KeyError:
-        return {}, f"Can't remove not exist object: {path_to_remove}."
+    elements = get_path_elements(command['path'])
+    if not is_path_exist(document, *elements):
+        return {}, f"Can't remove not exist object: {elements[-1]}."
+    path_to_remove = "][".join(repr(n) for n in elements)
+    exec(f"del document[{path_to_remove}]")  # bad practice
     return document, ""
 
 
 def add(document, command):
     """
     Adds a value to an object or inserts it into an array.
-    :param document:
-    :param command:
-    :return:
+    :param document: dict
+    :param command: str
+    :return: tuple( document(dict), error(str))
     """
-    splitted_path = command['path'].split('/')
-    value = command['value']
-    path_to_add = splitted_path[1]
-    index_to_add = None
-    if path_to_add not in document.keys():
-        document[path_to_add] = value
-        return document, ""
-    if len(splitted_path) == 3:
-        index_to_add = splitted_path[2]
-        try:
-            index_to_add = int(index_to_add)
-        except ValueError:
-            pass
-        try:
-            document[path_to_add][index_to_add]
+    elements = get_path_elements(command['path'])
 
-        except (IndexError, KeyError):
-            if not isinstance(index_to_add, int):
-                document[path_to_add] = {index_to_add: value}
-            else:
-                try:
-                    if isinstance(document[path_to_add], list):
-                        document[path_to_add].insert(index_to_add, value)
-                    elif isinstance(document[path_to_add], dict):
-                        document[path_to_add][index_to_add].update(value)
-                except ValueError:
-                    return {}, "Incorrect structure to add."
-        else:
-            return {}, "Can't overwrite existing value."
-    else:
-        try:
-            if isinstance(document[path_to_add], list):
-                document[path_to_add].append(value)
-            elif isinstance(document[path_to_add], dict):
-                document[path_to_add].update(value)
-        except ValueError:
-            return {}, "Incorrect structure to add."
+    value = command['value']
+    if is_path_exist(document, *elements):
+        return {}, "Can't overwrite existing value."
+
+    try:
+        path_to_add = "][".join(repr(n) for n in elements)
+        print(path_to_add)
+        exec(f"document[{path_to_add}].update(value)")  # bad practice
+    except KeyError:
+        exec(f"document[{path_to_add}] = value")  # bad practice
+    except IndexError:
+        index = elements.pop(-1)
+        path_to_add = "][".join(repr(n) for n in elements)
+        exec(f"document[{path_to_add}].insert({index}, value)")  # bad practice
     return document, ""
 
+def get_object_index(splitted_path):
+    index = None
+    if len(splitted_path) == 3:
+        try:
+            index = int(splitted_path[2])
+        except (ValueError, TypeError):
+            index = splitted_path[2]
+    return index
 
 def move(document, command):
     splitted_from_path = command['from'].split('/')
     splitted_to_path = command['path'].split('/')
     from_path = splitted_from_path[1]
     to_path = splitted_to_path[1]
-    index_to_move_from = None
 
-    if len(splitted_from_path) == 3:
-        index_to_move_from = int(splitted_from_path[2])
-    try:
-        if index_to_move_from is None:
-            value_to_move = document[from_path]
-        else:
-            value_to_move = document[from_path][index_to_move_from]
-    except KeyError:
-        return {}, "Can't move from not exist path."
-    except IndexError:
-        return {}, "Can't move not exist object."
+    index_to_move_from = get_object_index(splitted_from_path)
+
+    if index_to_move_from is None:
+        if not is_path_exist(document, from_path):
+            return {}, "Can't move from not exist path."
+        value_to_move = document[from_path]
+    else:
+        if not is_path_exist(document, from_path, index_to_move_from):
+            return {}, "Can't move from not exist path."
+        value_to_move = document[from_path][index_to_move_from]
     document[from_path] = []
-    try:
-        if type(value_to_move) == list:
-            document[to_path].extend(value_to_move)
-        else:
-            document[to_path].append(value_to_move)
-    except KeyError:
+
+    if not is_path_exist(document, to_path):
         return {}, "Can't move to not exist path."
+
+    if type(value_to_move) == list:
+        document[to_path].extend(value_to_move)
+    else:
+        document[to_path].append(value_to_move)
+
     return document, ""
+
+def is_path_exist(document, *args):
+    try:
+        doc_reference = document.copy()
+        for i in args:
+            doc_reference = doc_reference[i]
+    except (IndexError, KeyError, TypeError) as e:
+        print(e)
+        return False
+    return True
 
 
 def replace(document, command):
     splitted_path = command['path'].split('/')
     path_to_replace = splitted_path[1]
-    index_to_replace = None
-    if len(splitted_path) == 3:
-        index_to_replace = int(splitted_path[2])
+    index_to_replace = get_object_index(splitted_path)
     value = command['value']
-    try:
-        if index_to_replace is None:
+    if index_to_replace is None:
+        if is_path_exist(document, path_to_replace):
             document[path_to_replace] = value
         else:
+            return {}, "Can't replace not existing path."
+    else:
+        if is_path_exist(document, path_to_replace, index_to_replace):
             document[path_to_replace][index_to_replace] = value
-    except IndexError:
-        return {}, "Can't replace not existing object."
-    except KeyError:
-        return {}, "Can't replace not existing path."
+        else:
+            return {}, "Can't replace not existing path."
+
     return document, ""
 
 
@@ -106,24 +115,17 @@ def copy(document, command):
     splitted_path = command['from'].split('/')
     coppied_path = splitted_path[1]
     to_path = command['path'].split('/')[1]
-    index_to_copy = None
 
-    if len(splitted_path) == 3:
-        try:
-            index_to_copy = int(splitted_path[2])
-        except ValueError:
-            index_to_copy = splitted_path[2]
-    try:
-        if index_to_copy is None:
-            value_to_copy = document[coppied_path]
-        else:
-            value_to_copy = document[coppied_path][index_to_copy]
-    except KeyError:
-        return {}, "Can't copy from not exist path."
-    except IndexError:
-        return {}, "Can't copy from not exist object."
-    except TypeError:
-        return {}, "Can't get key address from list."
+    index_to_copy = get_object_index(splitted_path)
+
+    if index_to_copy is None:
+        if not is_path_exist(document, coppied_path):
+            return {}, "Can't copy from not exist path."
+        value_to_copy = document[coppied_path]
+    else:
+        if not is_path_exist(document, coppied_path, index_to_copy):
+            return {}, "Can't copy from not exist path."
+        value_to_copy = document[coppied_path][index_to_copy]
     try:
         if type(value_to_copy) == list:
             document[to_path].extend(value_to_copy)
@@ -137,23 +139,17 @@ def copy(document, command):
 def test(document, command):
     splitted_path = command['path'].split('/')
     path = splitted_path[1]
-    object_address = None
     expected_value = command['value']
-    if len(splitted_path) == 3:
-        object_address = splitted_path[2]
-        try:
-            object_address = int(object_address)
-        except ValueError:
-            object_address = object_address
-    try:
-        if object_address is None:
-            tested_value = document[path]
-        else:
-            tested_value = document[path][object_address]
-    except KeyError:
-        return {}, "Can't test not exist path."
-    except IndexError:
-        return {}, "Can't test not exist object."
+    object_address = get_object_index(splitted_path)
+
+    if object_address is None:
+        if not is_path_exist(document, path):
+            return {}, "Can't test not exist path."
+        tested_value = document[path]
+    else:
+        if not is_path_exist(document, path, object_address):
+            return {}, "Can't test not exist path."
+        tested_value = document[path][object_address]
 
     if tested_value == expected_value:
         return document, ""

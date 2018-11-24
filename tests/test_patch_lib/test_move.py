@@ -3,13 +3,6 @@ from patch_lib import PatchError
 from pytest import raises
 
 
-def test_move_path_list():
-    move_command = {"op": "move", "from": "/biscuits", "path": "/cookies"}
-    old_document = {"biscuits": ["biscuit"], "cookies": ["cookie"]}
-    document = patch_document(old_document, [move_command])
-    assert document == {"biscuits": [], "cookies": ["cookie", "biscuit"]}
-
-
 def test_move_single_value():
     move_command = {"op": "move", "from": "/biscuits/0", "path": "/cookies"}
     old_document = {"biscuits": ["biscuit", "second"], "cookies": ["cookie"]}
@@ -38,4 +31,4 @@ def test_move_not_exist_element():
     old_document = {"biscuits": ["biscuit"], "cookies": []}
     with raises(PatchError) as error:
         patch_document(old_document, [copy_command])
-    assert str(error.value) == "Can't move not exist object."
+    assert str(error.value) == "Can't move from not exist path."

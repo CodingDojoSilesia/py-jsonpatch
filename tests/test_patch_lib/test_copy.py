@@ -40,7 +40,7 @@ def test_copy_not_exist_index():
     old_document = {"biscuits": ["biscuit"], "cookies": []}
     with raises(PatchError) as error:
         patch_document(old_document, [copy_command])
-    assert str(error.value) == "Can't copy from not exist object."
+    assert str(error.value) == "Can't copy from not exist path."
 
 
 def test_copy_key_from_list():
@@ -48,7 +48,7 @@ def test_copy_key_from_list():
     old_document = {"biscuits": ["biscuit"], "cookies": []}
     with raises(PatchError) as error:
         patch_document(old_document, [copy_command])
-    assert str(error.value) == "Can't get key address from list."
+    assert str(error.value) == "Can't copy from not exist path."
 
 
 def test_copy_index_from_dict():
