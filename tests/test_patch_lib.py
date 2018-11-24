@@ -200,6 +200,7 @@ def test_copy_in_list():
         'bar': 'bar',
     }
 
+
 def test_replace_value():
     result = patch_document(
         document={
