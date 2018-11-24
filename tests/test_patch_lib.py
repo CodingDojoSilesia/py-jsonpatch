@@ -101,6 +101,16 @@ def test_replace_value():
     }
 
 
+def test_replace_not_exist_key():
+    with pytest.raises(PatchError) as excinfo:
+        result = patch_document(
+            document={'foo': 'bar'},
+            commands=[{'op': 'replace', 'path': '/bar', 'value': 'xxx'}],
+        )
+
+    assert excinfo.value.args[0] == "key doesn't exist in '/bar'"
+
+
 def test_find_parent_and_key_flat():
     obj = {'key': 'foobar'}
     parent, key = find_parent_and_key(obj,  ['key'])

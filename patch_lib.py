@@ -12,14 +12,14 @@ def patch_document(document, commands):
     return document
 
 
-def add_callback(document, command, replace=False):
+def add_callback(document, command):
     path = command['path']
     value = deepcopy(command['value'])
     parent, key = find_parent_and_key_with_path(document, path)
     if key == '-':
         parent.append(value)
     else:
-        if not replace and key in parent:
+        if key in parent:
             raise PatchError(f'key exists in {path!r}')
         parent[key] = value
 
@@ -27,12 +27,23 @@ def add_callback(document, command, replace=False):
 def remove_callback(document, command):
     path = command['path']
     parent, key = find_parent_and_key_with_path(document, path)
-
+    raise_if_not_found(parent, key, path)
     del parent[key]
 
 
 def replace_callback(document, command):
-    add_callback(document, command, replace=True)
+    path = command['path']
+    value = deepcopy(command['value'])
+    parent, key = find_parent_and_key_with_path(document, path)
+    raise_if_not_found(parent, key, path)
+    parent[key] = value
+
+
+def raise_if_not_found(parent, key, path):
+    try:
+        parent[key]
+    except (IndexError, KeyError):
+        raise PatchError(f'key doesn\'t exist in {path!r}')
 
 
 CALLBACKS = {
