@@ -34,7 +34,6 @@ def add(document, command):
 
     try:
         path_to_add = "][".join(repr(n) for n in elements)
-        print(path_to_add)
         exec(f"document[{path_to_add}].update(value)")  # bad practice
     except KeyError:
         exec(f"document[{path_to_add}] = value")  # bad practice
@@ -53,32 +52,35 @@ def get_object_index(splitted_path):
             index = splitted_path[2]
     return index
 
+
+def remove_by_path(data, keys):
+    if len(keys) == 1:
+        value = data[keys[0]]
+        print(value)
+        del data[keys[0]]
+        return value
+    return remove_by_path(data[keys[0]], keys[1:])
+
+def add_value_by_path(data, keys, value_to_add):
+    if len(keys) == 1:
+        if type(data) == list:
+            data.insert(keys[0], value_to_add)
+        else:
+            data[keys[0]].append(value_to_add)
+        return True
+    remove_by_path(data[keys[0]], keys[1:], value_to_add)
+
 def move(document, command):
-    splitted_from_path = command['from'].split('/')
-    splitted_to_path = command['path'].split('/')
-    from_path = splitted_from_path[1]
-    to_path = splitted_to_path[1]
+    elements_path_from = get_path_elements(command['from'])
+    elements_to_path = get_path_elements(command['path'])
 
-    index_to_move_from = get_object_index(splitted_from_path)
-
-    if index_to_move_from is None:
-        if not is_path_exist(document, from_path):
-            return {}, "Can't move from not exist path."
-        value_to_move = document[from_path]
-    else:
-        if not is_path_exist(document, from_path, index_to_move_from):
-            return {}, "Can't move from not exist path."
-        value_to_move = document[from_path][index_to_move_from]
-    document[from_path] = []
-
-    if not is_path_exist(document, to_path):
+    if not is_path_exist(document, *elements_path_from):
+        return {}, "Can't move from not exist path."
+    if not is_path_exist(document, *elements_to_path):
         return {}, "Can't move to not exist path."
-
-    if type(value_to_move) == list:
-        document[to_path].extend(value_to_move)
-    else:
-        document[to_path].append(value_to_move)
-
+    value_to_move = remove_by_path(document, elements_path_from)
+    print(value_to_move,'hh')
+    add_value_by_path(document, elements_to_path, value_to_move)
     return document, ""
 
 def is_path_exist(document, *args):

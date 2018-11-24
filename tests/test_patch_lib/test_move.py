@@ -7,7 +7,7 @@ def test_move_single_value():
     move_command = {"op": "move", "from": "/biscuits/0", "path": "/cookies"}
     old_document = {"biscuits": ["biscuit", "second"], "cookies": ["cookie"]}
     document = patch_document(old_document, [move_command])
-    assert document == {"biscuits": [], "cookies": ["cookie", "biscuit"]}
+    assert document == {"biscuits": ["second"], "cookies": ["cookie", "biscuit"]}
 
 
 def test_move_from_not_exist_path():
