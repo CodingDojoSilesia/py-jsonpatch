@@ -24,7 +24,7 @@ def test_copy_list_to_list():
     old_document = {"biscuits": ["biscuit", "to_copy"], "cookies": ["cookie"]}
     document = patch_document(old_document, [copy_command])
     assert document == {"biscuits": ["biscuit", "to_copy"],
-                        "cookies": ["cookie", "biscuit", "to_copy"]}
+                        "cookies": ["cookie", ["biscuit", "to_copy"]]}
 
 
 def test_copy_dict_to_list():
