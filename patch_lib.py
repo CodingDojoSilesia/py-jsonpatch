@@ -55,6 +55,16 @@ def move_callback(document, command, copy=False):
         del from_parent[from_key]
 
 
+def test_callback(document, command):
+    path = command['path']
+    value = command['value']
+    parent, key = find_parent_and_key_with_path(document, path)
+    raise_if_not_found(parent, key, path)
+
+    if parent[key] != value:
+        raise PatchError(f'test in {path!r} has failed')
+
+
 def raise_if_not_found(parent, key, path):
     try:
         parent[key]
@@ -77,6 +87,7 @@ CALLBACKS = {
     'replace': replace_callback,
     'move': move_callback,
     'copy': lambda d, c: move_callback(d, c, copy=True),
+    'test': test_callback,
 }
 
 

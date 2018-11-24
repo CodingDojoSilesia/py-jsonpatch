@@ -231,6 +231,36 @@ def test_replace_not_exist_key():
     assert excinfo.value.args[0] == "key doesn't exist in '/bar'"
 
 
+def test_valid_value():
+    patch_document(
+        document={'foo': 'bar'},
+        commands=[{'op': 'test', 'path': '/foo', 'value': 'bar'}],
+    )
+
+
+def test_invalid_value():
+    with pytest.raises(PatchError) as excinfo:
+        patch_document(
+            document={'foo': 'bar'},
+            commands=[{'op': 'test', 'path': '/foo', 'value': 'foo'}],
+        )
+
+    assert excinfo.value.args[0] == "test in '/foo' has failed"
+
+
+def test_valid_nested_value():
+    patch_document(
+        document={
+            'obj': [{'foo': 'bar'}],
+        },
+        commands=[
+            {'op': 'test', 'path': '/obj', 'value': [{'foo': 'bar'}]},
+            {'op': 'test', 'path': '/obj/0', 'value': {'foo': 'bar'}},
+            {'op': 'test', 'path': '/obj/0/foo', 'value': 'bar'},
+        ],
+    )
+
+
 def test_find_parent_and_key_flat():
     obj = {'key': 'foobar'}
     parent, key = find_parent_and_key(obj,  ['key'])
