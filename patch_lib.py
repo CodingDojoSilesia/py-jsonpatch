@@ -64,7 +64,7 @@ def find_parent_and_key(obj, path_list):
         key = int(key)
 
     if not new_path_list:
-        return obj, key 
+        return obj, key
 
     try:
         nested_obj = obj[key]

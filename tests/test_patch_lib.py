@@ -103,7 +103,7 @@ def test_replace_value():
 
 def test_replace_not_exist_key():
     with pytest.raises(PatchError) as excinfo:
-        result = patch_document(
+        patch_document(
             document={'foo': 'bar'},
             commands=[{'op': 'replace', 'path': '/bar', 'value': 'xxx'}],
         )
