@@ -37,7 +37,6 @@ pipenv run web
 virtualenv venv -ppython3
 source venv/bin/activate
 pip install flask pytest pytest-cov flake8
-pipenv install --three
 ```
 #### Run tests
 ```
