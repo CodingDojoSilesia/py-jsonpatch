@@ -1,4 +1,4 @@
-from helpers import get_path_elements
+from helpers import get_path_elements_as_list
 from helpers import is_path_exist
 from helpers import add_value_by_path
 from helpers import replace_value_by_path
@@ -12,7 +12,7 @@ def remove(document, command):
     :param command: dict example: {"op": "remove", "path": "/test"}
     :return:
     """
-    elements = get_path_elements(command['path'])
+    elements = get_path_elements_as_list(command['path'])
     if not is_path_exist(document, *elements):
         return {}, f"Can't remove not exist object: {elements[-1]}."
     path_to_remove = "][".join(repr(n) for n in elements)
@@ -27,7 +27,7 @@ def add(document, command):
     :param command: dict {"op": "add", "path": "/hello", "value": ["world"]}
     :return: tuple( document(dict), error(str))
     """
-    elements = get_path_elements(command['path'])
+    elements = get_path_elements_as_list(command['path'])
 
     value = command['value']
     if is_path_exist(document, *elements):
@@ -53,8 +53,8 @@ def move(document, command):
     {"op": "move", "from": "/biscuits/0", "path": "/cookies/2"}
     :return: (document(dict), error(str))
     """
-    elements_path_from = get_path_elements(command['from'])
-    elements_to_path = get_path_elements(command['path'])
+    elements_path_from = get_path_elements_as_list(command['from'])
+    elements_to_path = get_path_elements_as_list(command['path'])
 
     if not is_path_exist(document, *elements_path_from):
         return {}, "Can't move from not exist path."
@@ -70,7 +70,7 @@ def move(document, command):
 
 
 def replace(document, command):
-    path_to_replace = get_path_elements(command['path'])
+    path_to_replace = get_path_elements_as_list(command['path'])
     value = command['value']
     if not is_path_exist(document, *path_to_replace):
         return {}, "Can't replace not existing path."
@@ -86,8 +86,8 @@ def copy(document, command):
     {"op": "copy", "from": "/biscuits/0", "path": "/cookies/2"}
     :return: (document(dict), error(str))
     """
-    elements_path_from = get_path_elements(command['from'])
-    elements_to_path = get_path_elements(command['path'])
+    elements_path_from = get_path_elements_as_list(command['from'])
+    elements_to_path = get_path_elements_as_list(command['path'])
 
     if not is_path_exist(document, *elements_path_from):
         return {}, "Can't copy from not exist path."
@@ -110,7 +110,7 @@ def test(document, command):
      {"op": "test", "path": "/fooo/1", "value": "Choco Leibniz"}
     :return: (document(dict), error(str))
     """
-    path_elements = get_path_elements(command['path'])
+    path_elements = get_path_elements_as_list(command['path'])
     expected_value = command['value']
     if not is_path_exist(document, *path_elements):
         return {}, "Can't test not exist path."

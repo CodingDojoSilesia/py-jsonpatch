@@ -1,4 +1,4 @@
-def get_path_elements(path_to_split):
+def get_path_elements_as_list(path_to_split):
     splitted_path = path_to_split.split('/')
     path_elements = filter(str.strip, splitted_path)
     serialized_path = []
