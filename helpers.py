@@ -37,7 +37,7 @@ def get_value_by_path(data, keys):
 
 def add_value_by_path(data, keys, value_to_add):
     if len(keys) == 1:
-        if type(data) == list:
+        if isinstance(data, list):
             data.insert(keys[0], value_to_add)
         else:
             data[keys[0]].append(value_to_add)
@@ -47,7 +47,7 @@ def add_value_by_path(data, keys, value_to_add):
 
 def replace_value_by_path(data, keys, value_to_add):
     if len(keys) == 1:
-        if type(data) == list:
+        if isinstance(data, list):
             data[keys[0]] = value_to_add
         else:
             data[keys[0]] = value_to_add
