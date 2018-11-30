@@ -3,4 +3,4 @@ __pycache__
 files/*.json
 *.swp
 .coverage
-.idea/*
+.idea
