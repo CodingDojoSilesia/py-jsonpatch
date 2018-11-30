@@ -16,10 +16,8 @@ def execute_command(document, command):
     if not path[0] == '':
         raise PatchError('wrong path xd!')
     from_path = command.get('from', '').split('/')
-    actions.get(command['op'])(
-        path,
-        document,
-        command.get('value') or from_path)
+    action = actions.get(command['op'])
+    action(path, document, command.get('value') or from_path)
     return document
 
 
