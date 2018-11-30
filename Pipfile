@@ -13,8 +13,8 @@ pytest-cov = "*"
 [dev-packages]
 
 [requires]
-python_version = "3.6"
+python_version = "3.7.1"
 
 [scripts]
 tests = "bash -c 'flake8 && pytest -v --cov=.'"
-web = "bash -c 'FLASK_APP=web flask run'"
+web = "bash -c 'FLASK_APP=web FLASK_DEBUG=1 flask run'"
