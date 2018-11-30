@@ -1,5 +1,11 @@
 # py-jsonpatch
 
+## Solutions
+
+* [Firemark](https://github.com/CodingDojoSilesia/py-jsonpatch/tree/firemark-solution)
+* [Noemi](https://github.com/CodingDojoSilesia/py-jsonpatch/tree/noemi-solution)
+* Your solution :)
+
 ## Mission
 support http://jsonpatch.com/ in `patch_lib.py`
 
