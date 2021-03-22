@@ -126,11 +126,11 @@
         },
         "httpie": {
             "hashes": [
-                "sha256:1650342d2eca2622092196bf106ab8f68ea2dbb2ed265d37191185618e159a25",
-                "sha256:370106753e1baa6236fdd6e09a9e4cce310a54f18474f5b8a551b9f9c0d7eae1"
+                "sha256:2745b260227a4c7ea52cc6448be6e70e71558fdfb360fb8676a9d91aae701319",
+                "sha256:6d1b6e21da7d3ec030ae95536d4032c1129bdaf9de4adc72c596b87e5f646e80"
             ],
             "index": "pypi",
-            "version": "==1.0.0"
+            "version": "==1.0.3"
         },
         "idna": {
             "hashes": [
@@ -159,7 +159,6 @@
                 "sha256:03e47ad063331dd6a3f04a43eddca8a966a26ba0c5b7207a9a9e4e08f1b29419",
                 "sha256:a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6"
             ],
-            "index": "pypi",
             "version": "==2.11.3"
         },
         "markupsafe": {
